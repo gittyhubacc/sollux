@@ -1,0 +1,51 @@
+# don't forget comments
+my_open = `<`
+my_close = `>`
+my_equals = `=`
+my_slash = `/`
+my_comma = `,`
+my_int = `\\d*`
+my_string = `\\a.\\w*`
+
+my_lower (my_open, my_int i) {
+	i
+}
+
+my_upper (my_int i, my_close) {
+        i
+}
+
+my_rules (my_int i, my_equals, my_string s) {
+	'		state |= (i % "),' i ' == 0) << checks;\n'
+        '		if (state & (1 << (checks++))) {\n'
+        '			printf("' s '");\n'
+	'                       checked = 1;\n'
+        '		}\n'
+}
+
+my_rules (my_rules r, my_comma, my_int i, my_equals, my_string s) {
+	r
+	'		state |= (i % "),' i ' == 0) << checks;\n'
+        '		if (state & (1 << (checks++))) {\n'
+        '			printf(' s ');\n'
+	'                       checked = 1;\n'
+        '		}\n'
+}
+
+my_fizzbuzz(my_lower l, my_slash x, my_rules r, my_slash, my_upper u) {
+	'#include <stdio.h>\n'
+	'int main(int argc, char **argv)\n'
+	'{\n'
+	'	for (int i =' l '; i <= ' u '; i++) {\n'
+        '		int state = 0;\n'
+        '               int checks = 0;\n'
+        '               int checked = 0;\n'
+                        r
+        '               if (!checked) {\n'
+        '			printf("%i", i);\n'
+        '               }\n'
+        '		printf("\\n");\n'
+        '	}\n'
+        '       return 0;\n'
+        '}\n'
+}
