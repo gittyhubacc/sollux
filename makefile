@@ -10,8 +10,11 @@ BIN_DIR := ./bin
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 OBJS := $(SRCS:%.c=%.o)
 
+INSTALL_BIN := /usr/local/bin
+BIN_TARGET = $(BIN_DIR)/$(BIN_NAME)
 
-all: $(BIN_DIR)/$(BIN_NAME)
+
+all: $(BIN_TARGET)
 
 $(BIN_DIR)/$(BIN_NAME): $(OBJS)
 	@mkdir -p $(dir $@)
@@ -21,7 +24,9 @@ $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean
+.PHONY: clean install
 clean:
 	rm -f $(BIN_DIR)/$(BIN_NAME) $(OBJS)
 	rmdir $(BIN_DIR)
+install: $(BIN_TARGET)
+	sudo cp $(BIN_TARGET) $(INSTALL_BIN)
