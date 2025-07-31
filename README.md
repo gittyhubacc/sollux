@@ -4,6 +4,25 @@ Sollux accepts as input a *language definition* decorated with *tiles*.
 I'm not going to get into the theory here and now, 
 but there's a lot that excites me about this project.
 
+## Examples
+Buckle up. Both sollux and the compilers it produces have two dependencies.
+Both are libraries I've written and are hosted on github.
+This is an example of using sollux to produce a compiler.
+```
+$ ./bin/sollux <samples/hello hello.c         # feed language definition to sollux, produce source for compiler
+$ clang -c hello.c -o hello.o                 # compile and link compiler
+$ clang hello.o -lcirces -lmf -o hello
+$ echo 'Michael' | ./hello greet_michael.lua  # use new compiler to compile source to target as defined
+$ chmod +x greet_michael.lua                  # in this case, compiles "hello" language to lua
+$ ./greet_michael.lua
+Hello, Michael!
+$ echo "BrianK DennisR" | ./hello greet_kr.lua
+$ chmod +x greet_kr.lua
+$ ./greet_kr.lua
+Hello, BrianK!
+Hello, DennisR!
+```
+
 ## Grammar
 It's not BNF or EBNF or even formal probably, 
 but this is the grammar for the language definitions
@@ -36,6 +55,3 @@ terminal_list = terminal_binding | terminal_list, terminal_binding
 nonterminal_list = nonterminal_binding | nonterminal_list, nonterminal_binding
 binding_list = terminal_list, nonterminal_list
 ```
-
-## Examples
-
