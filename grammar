@@ -16,11 +16,12 @@ regex = '`', re, '`'
 ascii_block = ''', ascii_char, '''
 identifier = alpha | identifier, alphanumeric
 
-terminal_binding = identifier, '=', regex
 param_decl = identifier | identifier, identifier
 param_list = param_decl | param_list, ',', param_decl
 tile_template_value = identifier | ''', ascii, '''
 tile_template = tile_template_value | tile_template, tile_template_value
+terminal_binding = identifier, '=', regex
 nonterminal_binding = identifier, '(', param_list, ')', '{', tile_template, '}'
-binding = terminal_binding | nonterminal_binding
-binding_list = binding | binding_list binding
+terminal_list = terminal_binding | terminal_list, terminal_binding
+nonterminal_list = nonterminal_binding | nonterminal_list, nonterminal_binding
+binding_list = terminal_list, nonterminal_list
