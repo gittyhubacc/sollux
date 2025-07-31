@@ -828,9 +828,9 @@ int main(int argc, char **argv)
                     },
                     {
                         .type = TILE_LITERAL,
-                        .literal =
-                            S("_term.addr += 1;\n"
-                              "\t*(nfa *)node->data = circes_regex(&root, "),
+                        .literal = S("_term.addr += 1;\n"
+                                     "\t*(nfa *)node->data = "
+                                     "circes_regex(&root, rtmp, "),
                     },
                     {
                         .type = TILE_ARG_SDATA,
@@ -1220,6 +1220,7 @@ int main(int argc, char **argv)
                             "\tint root_sz = gigabyte;\n"
                             "\tchar *mem = malloc(root_sz);\n"
                             "\tarena root = make_arena_ptr(mem, root_sz);\n"
+                            "\tarena rtmp = reserve(root, char, root_sz / 2);\n"
                             "\tnfa_init_builtins(&root);\n"
                             "\tprogram_input input = read_input(&root, argc, "
                             "argv);\n"
@@ -1263,11 +1264,13 @@ int main(int argc, char **argv)
                             "\t\tnode = node->next;\n"
                             "\t}\n"
                             "\tgrmr.start = grmr.rules + (grmr.rule_cnt - 1);\n"
-                            "\ttoken_string tokens = circes_lex(&root, "
+                            "\ttoken_string tokens = circes_lex(&root, rtmp, "
                             "&grmr, input.program);\n"
-                            "\tparse_tree *tree = circes_parse(&root, &grmr, "
+                            "\tparse_tree *tree = circes_parse(&root, rtmp, "
+                            "&grmr, "
                             "tokens);\n"
-                            "\tstring program = circes_select(&root, &grmr, "
+                            "\tstring program = circes_select(&root, rtmp, "
+                            "&grmr, "
                             "tree);\n"
                             "\tprogram_output output;\n"
                             "\toutput.program = program;\n"
