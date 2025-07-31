@@ -1,13 +1,15 @@
 # Sollux
 Sollux is an unoptimized metacompiler, written for personal experimentation.
 Sollux accepts as input a *language definition* decorated with *tiles*.
-I'm not going to get into the theory here and now, 
-but there's a lot that excites me about this project.
+I'm not going to get into the theory here and now (probably later), 
+but this project is pretty badass. 
+
+## Dependencies
+Sollux (and the compiler it generates) needs to be linked with libc, [libcirces](https://github.com/gittyhubacc/circes), and [libmf](https://github.com/gittyhubacc/mf).
+Circes is a library I wrote that generates parsers and recognizes regular expressions. Mf is a personal util library.
 
 ## Examples
-Buckle up. Both sollux and the compilers it produces have two dependencies.
-Both are libraries I've written and are hosted on github.
-This is an example of using sollux to produce a compiler.
+Buckle up. This is an example of using Sollux to produce a compiler.
 ```
 $ ./bin/sollux <samples/hello hello.c         # feed language definition to sollux, produce source for compiler
 $ clang -c hello.c -o hello.o                 # compile and link compiler
