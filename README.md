@@ -9,8 +9,6 @@ Sollux (and the compiler it generates) needs to be linked with libc, [libcirces]
 Circes is a library I wrote that generates parsers and recognizes regular expressions. Mf is a personal util library.
 
 ## Examples
-Buckle up. This is an example of using Sollux to produce a compiler.
-
 A non trivial example.
 ```
 $ ./bin/sollux <samples/fzzbzz fzzbzzc.c                   # feed language definition to sollux, produce source for compiler
