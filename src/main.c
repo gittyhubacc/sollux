@@ -83,7 +83,7 @@ int main(int argc, char **argv)
          * head, program initialization
          */
 
-        int root_sz = gigabyte;
+        long root_sz = 4 * (long)gigabyte;
         char *mem = malloc(root_sz);
         arena root = make_arena_ptr(mem, root_sz);
         arena root_tmp = reserve(root, char, root_sz / 2);
@@ -1172,6 +1172,13 @@ int main(int argc, char **argv)
                             "        int bytes_used;\n"
                             "        string program;\n"
                             "} program_output;\n"
+                            "static string unwrap(string some)\n"
+                            "{\n"
+                            "\tstring result = some;\n"
+                            "\tresult.addr += 1;\n"
+                            "\tresult.len -= 2;\n"
+                            "\treturn result;\n"
+                            "}\n"
                             "\n"
                             "static const int part_sz = kibibyte / 4;\n"
                             "static program_input read_input(arena *a, int "
