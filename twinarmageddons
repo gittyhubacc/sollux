@@ -1,0 +1,276 @@
+identifier = `\\a.(_+\\w)*`
+equals = `=`
+regex = `\\b.\\x*.\\b*`
+paren_left = `\\(`
+paren_right = `\\)`
+curly_left = `{`
+curly_right = `}`
+comma = `,`
+ascii = `\\q.\\y*.\\q*`
+
+tbinding (identifier, equals, regex) {
+	'\n'
+	'#define ' identifier '_dg (1)\n'
+	'\tint ' identifier '_v = terminal_cnt++;\n'
+	'\tnode = make(&root, list, 1);\n'
+	'\tnode->data = make(&root, nfa, 1);\n'
+	'\tstring ' identifier '_term = unwrap(S(\"' regex '\"));\n'
+	'\t*(nfa *)node->data = circes_regex(&root, rtmp, ' identifier '_term);\n'
+	'\tlist_append(&terminals, node);\n'
+}
+
+tbinding_list (tbinding) {
+	tbinding
+}
+
+tbinding_list (tbinding_list, tbinding) {
+	tbinding_list
+	tbinding
+}
+
+param_decl (identifier) {
+        '\n'
+        '#ifndef ' identifier '_dg\n'
+        '#define ' identifier '_dg\n'
+        '\tint ' identifier '_v = terminal_cnt + (nonterminal_cnt++);\n'
+        '#endif\n'
+
+        '#ifndef ' identifier '_pos_dg\n'
+        '#define ' identifier '_pos_dg\n'
+        '\tint ' identifier '_pos;\n'
+        '#endif\n'
+
+	'\n'
+        '\t' identifier '_pos = arg_pos++;\n'
+	'\tnode = make(&root, list, 1);\n'
+	'\tnode->data = make(&root, token, 1);\n'
+	'\t*((token *)node->data) = T(' identifier '_v);\n'
+	'\tlist_append(&tok_list, node);\n'
+        '\ttok_cnt++;\n'
+}
+
+param_decl (identifier cls, identifier name) {
+        '\n'
+        '#ifndef ' cls '_dg\n'
+        '#define ' cls '_dg\n'
+        '\tint ' cls '_v = terminal_cnt + (nonterminal_cnt++);\n'
+        '#endif\n'
+
+        '#ifndef ' name '_pos_dg\n'
+        '#define ' name '_pos_dg\n'
+        '\tint ' name '_pos;\n'
+        '#endif\n'
+
+	'\n'
+        '\t' name '_pos = arg_pos++;\n'
+	'\tnode = make(&root, list, 1);\n'
+	'\tnode->data = make(&root, token, 1);\n'
+	'\t*((token *)node->data) = T(' cls '_v);\n'
+	'\tlist_append(&tok_list, node);\n'
+        '\ttok_cnt++;\n'
+}
+
+param_list (param_decl) {
+	param_decl
+}
+
+param_list (param_list, comma, param_decl) {
+	param_list
+	param_decl
+}
+
+tile_value (identifier) {
+	'\n'
+	'\tnode = make(&root, list, 1);\n'
+	'\tnode->data = make(&root, tile_val, 1);\n'
+	'\t((tile_val *)node->data)->type = TILE_ARG;\n'
+	'\t((tile_val *)node->data)->arg = ' identifier '_pos;\n'
+	'\tlist_append(&til_list, node);\n'
+	'\ttil_cnt++;\n'
+}
+
+tile_value (ascii) {
+	'\n'
+	'\tnode = make(&root, list, 1);\n'
+	'\tnode->data = make(&root, tile_val, 1);\n'
+	'\t((tile_val *)node->data)->type = TILE_LITERAL;\n'
+	'\t((tile_val *)node->data)->literal = unwrap(S(\"' ascii '\"));\n'
+	'\tlist_append(&til_list, node);\n'
+	'\ttil_cnt++;\n'
+}
+
+tile_template (tile_value) {
+	tile_value
+}
+
+tile_template (tile_template, tile_value) {
+	tile_template
+	'\n'
+	tile_value
+}
+
+nbinding (identifier, paren_left, param_list, paren_right, curly_left, tile_template, curly_right) {
+	'\n'
+	'\ttok_cnt = 0;\n'
+	'\ttil_cnt = 0;\n'
+	'\targ_pos = 0;\n'
+	'\ttok_list = NULL;\n'
+	'\ttil_list = NULL;\n'
+	'#ifndef ' identifier '_dg\n'
+	'#define ' identifier '_dg\n'
+	'\tint ' identifier '_v = terminal_cnt + (nonterminal_cnt++);\n'
+        '#endif\n'
+
+	param_list
+        tile_template
+
+	'        tile_body.addr = make(&root, tile_val, til_cnt);\n'
+	'        tile_body.len = 0;\n'
+	'        node = til_list;\n'
+	'        while (node) {\n'
+	'                tile_body.addr[tile_body.len++] = *((tile_val *)node->data);\n'
+	'                node = node->next;\n'
+	'        }\n'
+	'        rule_body.addr = make(&root, token, tok_cnt);\n'
+	'        rule_body.len = 0;\n'
+	'        node = tok_list;\n'
+	'        while (node) {\n'
+	'                rule_body.addr[rule_body.len++] = *((token *)node->data);\n'
+	'                node = node->next;\n'
+	'        }\n'
+	'        node = make(&root, list, 1);\n'
+	'        node->data = make(&root, pda_rule, 1);\n'
+	'        *(pda_rule *)node->data = (pda_rule){\n'
+	'                 .head = T(' identifier '_v),\n'
+	'                 .body = rule_body,\n'
+	'                 .tile = tile_body,\n'
+	'        };\n'
+	'        list_append(&rules, node);\n'
+	'        rule_cnt++;\n'
+}
+
+nbinding_list (nbinding) {
+	nbinding
+}
+
+nbinding_list (nbinding_list, nbinding) {
+	nbinding_list
+	nbinding
+}
+
+bindings (tbinding_list, nbinding_list) {
+	tbinding_list
+
+        '\n'
+        '#define over_dg (1)\n'
+        '\tint over_v = terminal_cnt++;\n\n'
+
+	nbinding_list
+}
+
+start (bindings, over) {
+	'#include <mf/string.h>\n'
+	'#include <mf/memory.h>\n'
+	'#include <circes.h>\n'
+	'#include <stdio.h>\n'
+	'#include <stdlib.h>\n'
+	'typedef struct program_input {\n'
+	'\tstring program;\n'
+	'} program_input;\n'
+	'\n'
+	'typedef struct program_output {\n'
+	'\tint bytes_used;\n'
+	'\tstring program;\n'
+	'} program_output;\n'
+	'\n'
+
+	'static string unwrap(string some)'
+	'{\n'
+        '\tstring result = some;\n'
+        '\tresult.addr += 1;\n'
+        '\tresult.len -= 2;\n'
+        '\treturn result;\n'
+	'}\n'
+
+	'static const int part_sz = kibibyte / 4;\n'
+	'static program_input read_input(arena *a, int argc, char **argv)\n'
+	'{\n'
+	'\tchar c = 0;\n'
+	'\tint parts_read = 0;\n'
+	'\tint bytes_read = 0;\n'
+	'\tchar *buffer = make(a, char, part_sz);\n'
+	'\n'
+	'\twhile ((c = fgetc(stdin)) != EOF) {\n'
+	'\t\tbuffer[(parts_read * part_sz) + bytes_read++] = c;\n'
+	'\t\tif (bytes_read >= part_sz) {\n'
+	'\t\t\tsteal(a, char, part_sz);\n'
+	'\t\t\tbytes_read = 0;\n'
+	'\t\t\tparts_read++;\n'
+	'\t\t}\n'
+	'\t}\n'
+	'\treturn (program_input){\n'
+	'\t\t.program = (string){buffer, parts_read * part_sz + bytes_read},\n'
+	'\t};\n'
+	'}\n'
+	'\n'
+	'static int write_output(int argc, char **argv, program_output output)\n'
+	'{\n'
+	'\tchar *path = \"program.c\";\n'
+	'\tif (argc >= 2) {\n'
+	'\t\tpath = argv[1];\n'
+	'\t\t}\n'
+	'\tFILE *out = fopen(path, \"w\");\n'
+	'\tfwrite(output.program.addr, sizeof(char), output.program.len, out);\n'
+	'\tfclose(out);\n'
+	'\treturn 0;\n'
+	'}\n'
+	'int main(int argc, char **argv)\n'
+	'{\n'
+	'\tint root_sz = gigabyte;\n'
+	'\tchar *mem = malloc(root_sz);\n'
+	'\tarena root = make_arena_ptr(mem, root_sz);\n'
+	'\tarena rtmp = reserve(root, char, root_sz / 2);\n'
+	'\tnfa_init_builtins(&root);\n'
+	'\tprogram_input input = read_input(&root, argc, argv);\n'
+	'\tint terminal_cnt = 0;\n'
+	'\tint nonterminal_cnt = 0;\n'
+	'\tint rule_cnt = 0;\n'
+	'\tint tok_cnt = 0;\n'
+	'\tint til_cnt = 0;\n'
+	'\tint arg_pos = 0;\n'
+	'\ttoken_string rule_body;\n'
+	'\ttile tile_body;\n'
+	'\tlist *tok_list = NULL;\n'
+	'\tlist *til_list = NULL;\n'
+	'\tlist *terminals = NULL;\n'
+	'\tlist *rules = NULL;\n'
+	'\tlist *node;\n'
+
+	bindings
+
+	'\n'
+	'\tgrammar grmr;\n'
+	'\tgrmr.lexer.len = 0;\n'
+	'\tgrmr.lexer.addr = make(&root, nfa, terminal_cnt);\n'
+	'\tnode = terminals;\n'
+	'\twhile (node) {\n'
+	'\tgrmr.lexer.addr[grmr.lexer.len++] = *(nfa *)node->data;\n'
+	'\t\tnode = node->next;\n'
+	'\t}\n'
+	'\tgrmr.rule_cnt = 0;\n'
+	'\tgrmr.rules = make(&root, pda_rule, rule_cnt);\n'
+	'\tnode = rules;\n'
+	'\twhile (node) {\n'
+	'\t\tgrmr.rules[grmr.rule_cnt++] = *(pda_rule *)node->data;\n'
+	'\t\tnode = node->next;\n'
+	'\t}\n'
+	'\tgrmr.start = grmr.rules + (grmr.rule_cnt - 1);\n'
+	'\ttoken_string tokens = circes_lex(&root, rtmp, &grmr, input.program);\n'
+	'\tparse_tree *tree = circes_parse(&root, rtmp, &grmr, tokens);\n'
+	'\tstring program = circes_select(&root, rtmp, &grmr, tree);\n'
+	'\tprogram_output output;\n'
+	'\toutput.program = program;\n'
+	'\toutput.bytes_used = bytes_used(root);\n'
+	'\treturn write_output(argc, argv, output);\n'
+	'}\n'
+}
